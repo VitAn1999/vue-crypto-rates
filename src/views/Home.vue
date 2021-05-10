@@ -62,7 +62,7 @@
             </div>
             <div class="w-full border-t border-gray-200"></div>
             <button
-              @click.stop="deleteHandle(t)"
+              @click.stop="handleDelete(t)"
               class="flex items-center justify-center font-medium w-full bg-gray-100 px-4 py-4 sm:px-6 text-md text-gray-500 hover:text-gray-600 hover:bg-gray-200 hover:opacity-20 transition-all focus:outline-none"
             >
               <svg
@@ -88,10 +88,12 @@
           {{ cell.name }} - USD
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
-          <div class="bg-purple-800 border w-10 h-24"></div>
-          <div class="bg-purple-800 border w-10 h-32"></div>
-          <div class="bg-purple-800 border w-10 h-48"></div>
-          <div class="bg-purple-800 border w-10 h-16"></div>
+          <div
+            v-for="(bar, idx) in normalizeGraph()"
+            :key="idx"
+            :style="{ height: `${bar}%` }"
+            class="bg-purple-800 border w-10"
+          ></div>
         </div>
         <button
           @click="cell = null"
@@ -132,7 +134,8 @@ export default {
     return {
       ticker: '',
       tickers: [],
-      cell: null
+      cell: null,
+      graph: []
     };
   },
   methods: {
@@ -142,6 +145,7 @@ export default {
         rate: '-'
       };
       this.tickers.push(currentTicker);
+
       setInterval(async () => {
         const fetchData = await fetch(
           `https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=39149bbaadcf44d2a07bf89388b77c90d10090763f617e635d62cda10bb16c04`
@@ -149,15 +153,35 @@ export default {
         const data = await fetchData.json();
         this.tickers.find(ticker => ticker.name === currentTicker.name).rate =
           data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(3);
+        if (this.cell?.name === currentTicker.name) {
+          this.graph.push(data.USD);
+        }
       }, 5000);
 
       this.ticker = '';
     },
-    deleteHandle(inputTicker) {
+
+    handleDelete(inputTicker) {
       this.tickers = this.tickers.filter(ticker => ticker !== inputTicker);
+      this.cell = null;
     },
+
     checkTicker(ticker) {
       this.cell = ticker;
+      this.graph = [];
+    },
+
+    normalizeGraph() {
+      const maxValue = Math.max(...this.graph);
+      const minValue = Math.min(...this.graph);
+      return this.graph.map(rate => {
+        if (minValue === maxValue) {
+          return 20;
+        } else {
+          let bar = 20 + ((rate - minValue) * 80) / (maxValue - minValue);
+          return bar;
+        }
+      });
     }
   }
 };
