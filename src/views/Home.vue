@@ -61,16 +61,64 @@
       </section>
       <hr class="w-full border-t border-gray-600 my-4" />
       <template v-if="tickers.length">
-        <div class="mt-1 max-w-xs relative rounded-md shadow-md">
-          <input
-            v-model="filter"
-            type="text"
-            name="filter"
-            id="filter"
-            class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
-            placeholder="Фильтр..."
-          />
-        </div>
+        <template class="mt-1 max-w-xs flex justify-between">
+          <div class="relative rounded-md shadow-md">
+            <input
+              v-model="filter"
+              type="text"
+              name="filter"
+              id="filter"
+              class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
+              placeholder="Фильтр..."
+            />
+          </div>
+          <nav
+            class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+            aria-label="Pagination"
+          >
+            <button
+              @click="page - 1"
+              :disabled="page === 1"
+              class="disabled:opacity-20 relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              <span class="sr-only">Previous</span>
+              <svg
+                class="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+
+            <button
+              @click="page + 1"
+              :disabled="tickers.length <= page * 6"
+              class="disabled:opacity-20 relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+            >
+              <span class="sr-only">Next</span>
+              <svg
+                class="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </nav>
+        </template>
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
@@ -166,23 +214,33 @@ export default {
       cell: null,
       graph: [],
       fetchTickersList: [],
-      tickersList: []
+      tickersList: [],
+      page: 1
     };
+  },
+  watch: {
+    currentPage() {
+      console.log(this.page);
+    }
   },
 
   computed: {
+    currentPage() {
+      console.log(this.page);
+      return this.page;
+    },
+
     filteredTickers() {
+      const start = (this.page - 1) * 6;
+      const end = this.page * 6;
+      const filteredTickers = this.tickers.slice(start, end);
+      console.log(this.tickers);
       if (this.filter) {
-        console.log(
-          this.tickers.filter(ticker =>
-            ticker.name.includes(this.filter.toUpperCase())
-          )
-        );
-        return this.tickers.filter(ticker =>
+        return filteredTickers.filter(ticker =>
           ticker.name.includes(this.filter.toUpperCase())
         );
       }
-      return this.tickers;
+      return filteredTickers;
     },
     isRepeat() {
       if (
