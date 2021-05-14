@@ -59,11 +59,22 @@
           Добавить
         </button>
       </section>
+      <hr class="w-full border-t border-gray-600 my-4" />
       <template v-if="tickers.length">
+        <div class="mt-1 max-w-xs relative rounded-md shadow-md">
+          <input
+            v-model="filter"
+            type="text"
+            name="filter"
+            id="filter"
+            class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
+            placeholder="Фильтр..."
+          />
+        </div>
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
-            v-for="(t, inx) in tickers"
+            v-for="(t, inx) in filteredTickers"
             :key="inx"
             @click="checkTicker(t)"
             :class="{ 'border-4': t === cell }"
@@ -150,6 +161,7 @@ export default {
   data() {
     return {
       ticker: '',
+      filter: '',
       tickers: [],
       cell: null,
       graph: [],
@@ -159,6 +171,19 @@ export default {
   },
 
   computed: {
+    filteredTickers() {
+      if (this.filter) {
+        console.log(
+          this.tickers.filter(ticker =>
+            ticker.name.includes(this.filter.toUpperCase())
+          )
+        );
+        return this.tickers.filter(ticker =>
+          ticker.name.includes(this.filter.toUpperCase())
+        );
+      }
+      return this.tickers;
+    },
     isRepeat() {
       if (
         this.tickers.findIndex(ticker => ticker.name === this.ticker) === -1
