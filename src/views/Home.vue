@@ -21,12 +21,12 @@
               />
             </div>
             <div
-              v-if="ticker && fetchTickersList.includes(ticker.toUpperCase())"
+              v-if="isInclude"
               class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
             >
               <span
-                v-for="(t, idx) in inputTicker()"
-                :key="idx"
+                v-for="t in tickersList"
+                :key="t"
                 @click="addFromSelect(t)"
                 class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
               >
@@ -157,6 +157,7 @@ export default {
       tickersList: []
     };
   },
+
   computed: {
     isRepeat() {
       if (
@@ -165,9 +166,41 @@ export default {
         return false;
       }
       return true;
+    },
+    isInclude() {
+      if (
+        this.ticker &&
+        this.fetchTickersList.filter(t =>
+          t.startsWith(this.ticker.toUpperCase())
+        )
+      ) {
+        return true;
+      }
+      return false;
     }
   },
+
   methods: {
+    fetchDataRates(tickerName) {
+      const fetchDataId = setInterval(async () => {
+        if (
+          this.tickers.findIndex(ticker => ticker.name === tickerName) === -1
+        ) {
+          clearInterval(fetchDataId);
+        } else {
+          const fetchData = await fetch(
+            `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=39149bbaadcf44d2a07bf89388b77c90d10090763f617e635d62cda10bb16c04`
+          );
+          const data = await fetchData.json();
+          this.tickers.find(ticker => ticker.name === tickerName).rate =
+            data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(3);
+          if (this.cell?.name === tickerName) {
+            this.graph.push(data.USD);
+          }
+        }
+      }, 5000);
+    },
+
     add() {
       const currentTicker = {
         name: this.ticker,
@@ -180,27 +213,9 @@ export default {
       ) {
         this.tickers.push(currentTicker);
 
-        const fetchDataId = setInterval(async () => {
-          if (
-            this.tickers.findIndex(
-              ticker => ticker.name === currentTicker.name
-            ) === -1
-          ) {
-            clearInterval(fetchDataId);
-          } else {
-            const fetchData = await fetch(
-              `https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=39149bbaadcf44d2a07bf89388b77c90d10090763f617e635d62cda10bb16c04`
-            );
-            const data = await fetchData.json();
-            this.tickers.find(
-              ticker => ticker.name === currentTicker.name
-            ).rate =
-              data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(3);
-            if (this.cell?.name === currentTicker.name) {
-              this.graph.push(data.USD);
-            }
-          }
-        }, 5000);
+        this.fetchDataRates(currentTicker.name);
+
+        localStorage.setItem('activeTickers', JSON.stringify(this.tickers));
 
         this.ticker = '';
       }
@@ -211,8 +226,9 @@ export default {
       this.add();
     },
 
-    handleDelete(inputTicker) {
-      this.tickers = this.tickers.filter(ticker => ticker !== inputTicker);
+    handleDelete(inputTick) {
+      this.tickers = this.tickers.filter(ticker => ticker !== inputTick);
+      localStorage.setItem('activeTickers', JSON.stringify(this.tickers));
       this.cell = null;
     },
 
@@ -235,7 +251,7 @@ export default {
     },
 
     inputTicker() {
-      const inputArr = this.fetchTickersList.filter(t =>
+      let inputArr = this.fetchTickersList.filter(t =>
         t.startsWith(this.ticker.toUpperCase())
       );
       if (inputArr.length !== this.fetchTickersList.length) {
@@ -244,7 +260,8 @@ export default {
       return this.tickersList;
     }
   },
-  async mounted() {
+
+  async created() {
     const fetchData = await fetch(
       'https://min-api.cryptocompare.com/data/all/coinlist?summary=true'
     );
@@ -252,6 +269,11 @@ export default {
     Object.values(fetchDataJson.Data).forEach(t => {
       this.fetchTickersList.push(t.Symbol);
     });
+    if (localStorage.getItem('activeTickers')) {
+      this.tickers = JSON.parse(localStorage.getItem('activeTickers'));
+      const activeTickers = this.tickers;
+      activeTickers.forEach(ticker => this.fetchDataRates(ticker.name));
+    }
   }
 };
 </script>
