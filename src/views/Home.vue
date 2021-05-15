@@ -123,7 +123,7 @@
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
-            v-for="(t, inx) in filteredTickers"
+            v-for="(t, inx) in paginatedTickers"
             :key="inx"
             @click="checkTicker(t)"
             :class="{ 'border-4': t === cell }"
@@ -221,18 +221,26 @@ export default {
   },
 
   computed: {
+    startIndex() {
+      return (this.page - 1) * 6;
+    },
+
+    endIndex() {
+      return this.page * 6;
+    },
+
     filteredTickers() {
-      const start = (this.page - 1) * 6;
-      const end = this.page * 6;
-      return this.tickers
-        .filter(ticker => {
-          return ticker.name.includes(this.filter.toUpperCase());
-        })
-        .slice(start, end);
+      return this.tickers.filter(ticker =>
+        ticker.name.includes(this.filter.toUpperCase())
+      );
+    },
+
+    paginatedTickers() {
+      return this.filteredTickers.slice(this.startIndex, this.endIndex);
     },
 
     hasNextPage() {
-      return this.tickers.length <= this.page * 6;
+      return this.filteredTickers.length < this.endIndex;
     },
 
     isRepeat() {
@@ -354,12 +362,12 @@ export default {
     },
     page() {
       this.saveUrlInHistory();
-    },
-    tickers() {
-      if (this.tickers.length < this.page * 6 && this.page > 1) {
-        this.page = this.page - 1;
-      }
     }
+    // tickers() {
+    //   if (this.tickers.length < this.page * 6 && this.page > 1) {
+    //     this.page = this.page - 1;
+    //   }
+    // }
   },
 
   async created() {
