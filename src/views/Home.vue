@@ -79,7 +79,7 @@
           >
             <button
               @click="page = page - 1"
-              :disabled="page === 1"
+              :disabled="page < 2"
               class="disabled:opacity-20 relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
             >
               <span class="sr-only">Previous</span>
@@ -232,7 +232,7 @@ export default {
     },
 
     hasNextPage() {
-      return this.filteredTickers.length <= this.page * 6;
+      return this.tickers.length <= this.page * 6;
     },
 
     isRepeat() {
@@ -336,10 +336,43 @@ export default {
         this.tickersList = inputArr.slice(0, 4);
       }
       return this.tickersList;
+    },
+
+    saveUrlInHistory() {
+      // Используем встроенный метод history.pushState() для сохранения query-параметров
+      history.pushState(
+        null,
+        document.title,
+        `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
+      );
+    }
+  },
+
+  watch: {
+    filter() {
+      this.saveUrlInHistory();
+    },
+    page() {
+      this.saveUrlInHistory();
+    },
+    tickers() {
+      if (this.tickers.length < this.page * 6 && this.page > 1) {
+        this.page = this.page - 1;
+      }
     }
   },
 
   async created() {
+    // загружаем history с query-параметрами и записываем их в объект с ключами filter и page
+    const windowData = Object.fromEntries(
+      new URL(window.location).searchParams.entries()
+    );
+    if (windowData.filter) {
+      this.filter = windowData.filter;
+    }
+    if (windowData.page) {
+      this.page = +windowData.page;
+    }
     const fetchData = await fetch(
       'https://min-api.cryptocompare.com/data/all/coinlist?summary=true'
     );
