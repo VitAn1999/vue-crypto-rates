@@ -21,7 +21,7 @@
               />
             </div>
             <div
-              v-if="isInclude"
+              v-show="isInclude"
               class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
             >
               <span
@@ -65,6 +65,7 @@
           <div class="relative rounded-md shadow-md">
             <input
               v-model="filter"
+              @input="page = 1"
               type="text"
               name="filter"
               id="filter"
@@ -77,7 +78,7 @@
             aria-label="Pagination"
           >
             <button
-              @click="page - 1"
+              @click="page = page - 1"
               :disabled="page === 1"
               class="disabled:opacity-20 relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
             >
@@ -98,8 +99,8 @@
             </button>
 
             <button
-              @click="page + 1"
-              :disabled="tickers.length <= page * 6"
+              @click="page = page + 1"
+              :disabled="hasNextPage"
               class="disabled:opacity-20 relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
             >
               <span class="sr-only">Next</span>
@@ -218,30 +219,22 @@ export default {
       page: 1
     };
   },
-  watch: {
-    currentPage() {
-      console.log(this.page);
-    }
-  },
 
   computed: {
-    currentPage() {
-      console.log(this.page);
-      return this.page;
-    },
-
     filteredTickers() {
       const start = (this.page - 1) * 6;
       const end = this.page * 6;
-      const filteredTickers = this.tickers.slice(start, end);
-      console.log(this.tickers);
-      if (this.filter) {
-        return filteredTickers.filter(ticker =>
-          ticker.name.includes(this.filter.toUpperCase())
-        );
-      }
-      return filteredTickers;
+      return this.tickers
+        .filter(ticker => {
+          return ticker.name.includes(this.filter.toUpperCase());
+        })
+        .slice(start, end);
     },
+
+    hasNextPage() {
+      return this.filteredTickers.length <= this.page * 6;
+    },
+
     isRepeat() {
       if (
         this.tickers.findIndex(ticker => ticker.name === this.ticker) === -1
@@ -250,12 +243,13 @@ export default {
       }
       return true;
     },
+
     isInclude() {
       if (
         this.ticker &&
         this.fetchTickersList.filter(t =>
           t.startsWith(this.ticker.toUpperCase())
-        )
+        ).length
       ) {
         return true;
       }
@@ -286,12 +280,13 @@ export default {
 
     add() {
       const currentTicker = {
-        name: this.ticker,
+        name: this.ticker.toUpperCase(),
         rate: '-'
       };
       if (
-        this.tickers.findIndex(ticker => ticker.name === currentTicker.name) ===
-          -1 &&
+        this.tickers.findIndex(
+          ticker => ticker.name.toUpperCase() === currentTicker.name
+        ) === -1 &&
         this.fetchTickersList.includes(this.ticker.toUpperCase())
       ) {
         this.tickers.push(currentTicker);
