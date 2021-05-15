@@ -22,7 +22,7 @@
             </div>
             <div
               v-show="isInclude"
-              class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
+              class="flex bg-white shadow-md p-1 rounded-md flex-wrap"
             >
               <span
                 v-for="t in tickersList"
@@ -166,7 +166,7 @@
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
           <div
-            v-for="(bar, idx) in normalizeGraph()"
+            v-for="(bar, idx) in normalizeGraph"
             :key="idx"
             :style="{ height: `${bar}%` }"
             class="bg-purple-800 border w-10"
@@ -240,7 +240,7 @@ export default {
     },
 
     hasNextPage() {
-      return this.filteredTickers.length < this.endIndex;
+      return this.filteredTickers.length <= this.endIndex;
     },
 
     isRepeat() {
@@ -262,6 +262,20 @@ export default {
         return true;
       }
       return false;
+    },
+
+    normalizeGraph() {
+      const maxValue = Math.max(...this.graph);
+      const minValue = Math.min(...this.graph);
+
+      if (minValue === maxValue) {
+        return this.graph.map(() => 20);
+      }
+
+      return this.graph.map(rate => {
+        let bar = 20 + ((rate - minValue) * 80) / (maxValue - minValue);
+        return bar;
+      });
     }
   },
 
@@ -323,19 +337,6 @@ export default {
       this.graph = [];
     },
 
-    normalizeGraph() {
-      const maxValue = Math.max(...this.graph);
-      const minValue = Math.min(...this.graph);
-      return this.graph.map(rate => {
-        if (minValue === maxValue) {
-          return 20;
-        } else {
-          let bar = 20 + ((rate - minValue) * 80) / (maxValue - minValue);
-          return bar;
-        }
-      });
-    },
-
     inputTicker() {
       let inputArr = this.fetchTickersList.filter(t =>
         t.startsWith(this.ticker.toUpperCase())
@@ -362,12 +363,14 @@ export default {
     },
     page() {
       this.saveUrlInHistory();
+    },
+
+    // При перезагрузке страницы вызывается watch и отлистывает ее на одну назад
+    paginatedTickers() {
+      if (this.paginatedTickers.length === 0 && this.page > 1) {
+        this.page = this.page - 1;
+      }
     }
-    // tickers() {
-    //   if (this.tickers.length < this.page * 6 && this.page > 1) {
-    //     this.page = this.page - 1;
-    //   }
-    // }
   },
 
   async created() {
