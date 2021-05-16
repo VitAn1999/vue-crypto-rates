@@ -205,6 +205,7 @@
 </template>
 
 <script>
+import { loadRates } from '../api/loadRates';
 export default {
   name: 'Home',
   data() {
@@ -280,24 +281,18 @@ export default {
   },
 
   methods: {
-    fetchDataRates(tickerName) {
-      const fetchDataId = setInterval(async () => {
-        if (
-          this.tickers.findIndex(ticker => ticker.name === tickerName) === -1
-        ) {
-          clearInterval(fetchDataId);
-        } else {
-          const fetchData = await fetch(
-            `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=39149bbaadcf44d2a07bf89388b77c90d10090763f617e635d62cda10bb16c04`
-          );
-          const data = await fetchData.json();
-          this.tickers.find(ticker => ticker.name === tickerName).rate =
-            data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(3);
-          if (this.selectedTicker?.name === tickerName) {
-            this.graph.push(data.USD);
-          }
-        }
-      }, 5000);
+    async updateTickersRates() {
+      if (!this.tickers.length) {
+        return;
+      }
+
+      const tickersRates = await loadRates(this.tickers.map(t => t.name));
+
+      this.tickers.forEach(ticker => {
+        console.log(tickersRates);
+        const price = tickersRates[ticker.name.toUpperCase()];
+        ticker.price = price ? 1 / price : '-';
+      });
     },
 
     add() {
@@ -312,9 +307,6 @@ export default {
         this.fetchTickersList.includes(this.ticker.toUpperCase())
       ) {
         this.tickers = [...this.tickers, currentTicker];
-
-        this.fetchDataRates(currentTicker.name);
-
         this.ticker = '';
       }
     },
@@ -400,9 +392,8 @@ export default {
     });
     if (localStorage.getItem('activeTickers')) {
       this.tickers = JSON.parse(localStorage.getItem('activeTickers'));
-      const activeTickers = this.tickers;
-      activeTickers.forEach(ticker => this.fetchDataRates(ticker.name));
     }
+    setInterval(this.updateTickersRates, 5000);
   }
 };
 </script>
