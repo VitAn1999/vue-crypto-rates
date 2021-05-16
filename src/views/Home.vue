@@ -126,7 +126,7 @@
             v-for="(t, inx) in paginatedTickers"
             :key="inx"
             @click="checkTicker(t)"
-            :class="{ 'border-4': t === cell }"
+            :class="{ 'border-4': t === selectedTicker }"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
             <div class="px-4 py-5 sm:p-6 text-center">
@@ -160,9 +160,9 @@
         </dl>
         <hr class="w-full border-t border-gray-600 my-4" />
       </template>
-      <section class="relative" v-if="cell">
+      <section class="relative" v-if="selectedTicker">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-          {{ cell.name }} - USD
+          {{ selectedTicker.name }} - USD
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
           <div
@@ -173,7 +173,7 @@
           ></div>
         </div>
         <button
-          @click="cell = null"
+          @click="selectedTicker = null"
           type="button"
           class="absolute top-0 right-0"
         >
@@ -212,7 +212,7 @@ export default {
       ticker: '',
       filter: '',
       tickers: [],
-      cell: null,
+      selectedTicker: null,
       graph: [],
       fetchTickersList: [],
       tickersList: [],
@@ -293,7 +293,7 @@ export default {
           const data = await fetchData.json();
           this.tickers.find(ticker => ticker.name === tickerName).rate =
             data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(3);
-          if (this.cell?.name === tickerName) {
+          if (this.selectedTicker?.name === tickerName) {
             this.graph.push(data.USD);
           }
         }
@@ -311,11 +311,9 @@ export default {
         ) === -1 &&
         this.fetchTickersList.includes(this.ticker.toUpperCase())
       ) {
-        this.tickers.push(currentTicker);
+        this.tickers = [...this.tickers, currentTicker];
 
         this.fetchDataRates(currentTicker.name);
-
-        localStorage.setItem('activeTickers', JSON.stringify(this.tickers));
 
         this.ticker = '';
       }
@@ -328,13 +326,13 @@ export default {
 
     handleDelete(inputTick) {
       this.tickers = this.tickers.filter(ticker => ticker !== inputTick);
-      localStorage.setItem('activeTickers', JSON.stringify(this.tickers));
-      this.cell = null;
+      if (this.selectedTicker === inputTick) {
+        this.selectedTicker = null;
+      }
     },
 
     checkTicker(ticker) {
-      this.cell = ticker;
-      this.graph = [];
+      this.selectedTicker = ticker;
     },
 
     inputTicker() {
@@ -358,9 +356,18 @@ export default {
   },
 
   watch: {
+    tickers() {
+      localStorage.setItem('activeTickers', JSON.stringify(this.tickers));
+    },
+
+    selectedTicker() {
+      this.graph = [];
+    },
+
     filter() {
       this.saveUrlInHistory();
     },
+
     page() {
       this.saveUrlInHistory();
     },
