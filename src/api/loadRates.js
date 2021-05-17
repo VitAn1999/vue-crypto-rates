@@ -4,8 +4,6 @@ const API_KEY =
 export const loadRates = tickers =>
   fetch(
     `https://min-api.cryptocompare.com/data/price?fsym=USD&tsyms=${tickers.join(
-      ', '
+      ','
     )}&api_key=${API_KEY}`
-  )
-    .then(response => response.json())
-    .then(data => console.log(data));
+  ).then(response => response.json());

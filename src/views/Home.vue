@@ -289,9 +289,19 @@ export default {
       const tickersRates = await loadRates(this.tickers.map(t => t.name));
 
       this.tickers.forEach(ticker => {
-        console.log(tickersRates);
-        const price = tickersRates[ticker.name.toUpperCase()];
-        ticker.price = price ? 1 / price : '-';
+        const rate = tickersRates[ticker.name.toUpperCase()];
+        console.log(1 / rate);
+        if (!rate) {
+          ticker.rate = '-';
+          return;
+        }
+        const normalizeRate = 1 / rate;
+        const formattedRate =
+          normalizeRate > 1
+            ? normalizeRate.toFixed(2)
+            : normalizeRate.toPrecision(3);
+
+        ticker.rate = formattedRate;
       });
     },
 
@@ -307,6 +317,7 @@ export default {
         this.fetchTickersList.includes(this.ticker.toUpperCase())
       ) {
         this.tickers = [...this.tickers, currentTicker];
+        this.updateTickersRates();
         this.ticker = '';
       }
     },
