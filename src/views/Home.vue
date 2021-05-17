@@ -134,7 +134,7 @@
                 {{ t.name.toUpperCase() }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ formattedRate(+t.rate) }}
+                {{ formattedRate(t.rate) }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
@@ -298,7 +298,7 @@ export default {
       if (rate === '-') {
         return rate;
       }
-      return rate > 1 ? rate.toFixed(2) : rate.toPrecision(3);
+      return rate > 1 ? +rate.toFixed(2) : +rate.toPrecision(3);
     },
 
     add() {
