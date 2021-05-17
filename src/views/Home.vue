@@ -134,7 +134,7 @@
                 {{ t.name.toUpperCase() }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ t.rate }}
+                {{ formattedRate(t.rate) }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
@@ -290,19 +290,18 @@ export default {
 
       this.tickers.forEach(ticker => {
         const rate = tickersRates[ticker.name.toUpperCase()];
-        console.log(1 / rate);
         if (!rate) {
           ticker.rate = '-';
           return;
         }
         const normalizeRate = 1 / rate;
-        const formattedRate =
-          normalizeRate > 1
-            ? normalizeRate.toFixed(2)
-            : normalizeRate.toPrecision(3);
 
-        ticker.rate = formattedRate;
+        ticker.rate = normalizeRate;
       });
+    },
+
+    formattedRate(rate) {
+      return rate > 1 ? rate.toFixed(2) : rate.toPrecision(3);
     },
 
     add() {
@@ -317,7 +316,6 @@ export default {
         this.fetchTickersList.includes(this.ticker.toUpperCase())
       ) {
         this.tickers = [...this.tickers, currentTicker];
-        this.updateTickersRates();
         this.ticker = '';
       }
     },
@@ -361,6 +359,7 @@ export default {
   watch: {
     tickers() {
       localStorage.setItem('activeTickers', JSON.stringify(this.tickers));
+      this.updateTickersRates();
     },
 
     selectedTicker() {
