@@ -9,7 +9,7 @@ export const loadRates = () => {
   }
   fetch(
     `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${Array.from(
-      tickersHandler.key()
+      tickersHandler.keys()
     ).join(',')}&tsyms=USD&api_key=${API_KEY}`
   )
     .then(response => response.json())
@@ -20,11 +20,12 @@ export const loadRates = () => {
         Object.entries(loadData).map(([key, value]) => [key, value.USD])
       );
       // Превращаем updateRates в массив ['BTC', 51250.52]
-      Object.entries(updatedRates).forEach((tickerName, rate) => {
+      Object.entries(updatedRates).forEach(([tickerName, rate]) => {
         // в массив handlers помещаем callback-функции по ключу tickerName
         const handlers = tickersHandler.get(tickerName) || [];
         // перебираем все колбэки и в качестве аргумента помещаем туда
         // актуальные курсы
+        console.log(tickerName, rate);
         handlers.forEach(cb => cb(rate));
       });
     });
@@ -37,12 +38,8 @@ export const subscribeToTicker = (ticker, cb) => {
   tickersHandler.set(ticker, [...subscriber, cb]);
 };
 
-export const unsubscribeFromTicker = (ticker, cb) => {
-  const subscriber = tickersHandler.get(ticker) || [];
-  tickersHandler.set(
-    ticker,
-    subscriber.filter(fn => fn !== cb)
-  );
+export const unsubscribeFromTicker = ticker => {
+  tickersHandler.delete(ticker);
 };
 
 setInterval(loadRates, 5000);

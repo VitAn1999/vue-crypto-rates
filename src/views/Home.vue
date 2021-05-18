@@ -281,15 +281,10 @@ export default {
   },
 
   methods: {
-    async updateTickersRates() {
-      // if (!this.tickers.length) {
-      //   return;
-      // }
-      // const tickersRates = await loadRates(this.tickers.map(t => t.name));
-      // this.tickers.forEach(ticker => {
-      //   const rate = tickersRates[ticker.name.toUpperCase()];
-      //   ticker.rate = rate ?? '-';
-      // });
+    updateTickers(tickerName, rate) {
+      this.tickers
+        .filter(t => t.name === tickerName)
+        .forEach(t => (t.rate = rate));
     },
 
     formattedRate(rate) {
@@ -312,9 +307,9 @@ export default {
       ) {
         this.tickers = [...this.tickers, currentTicker];
         this.ticker = '';
-        subscribeToTicker(currentTicker.name, () => {
-          console.log(currentTicker.name);
-        });
+        subscribeToTicker(currentTicker.name, rate =>
+          this.updateTickers(currentTicker.name, rate)
+        );
       }
     },
 
@@ -328,10 +323,7 @@ export default {
       if (this.selectedTicker === inputTick) {
         this.selectedTicker = null;
       }
-
-      unsubscribeFromTicker(inputTick, () => {
-        console.log(inputTick);
-      });
+      unsubscribeFromTicker(inputTick.name);
     },
 
     checkTicker(ticker) {
@@ -361,7 +353,7 @@ export default {
   watch: {
     tickers() {
       localStorage.setItem('activeTickers', JSON.stringify(this.tickers));
-      this.updateTickersRates();
+      this.updateTickers();
     },
 
     selectedTicker() {
@@ -405,12 +397,11 @@ export default {
     if (localStorage.getItem('activeTickers')) {
       this.tickers = JSON.parse(localStorage.getItem('activeTickers'));
       this.tickers.forEach(ticker => {
-        subscribeToTicker(ticker.name, () => {
-          console.log(ticker.name);
-        });
+        subscribeToTicker(ticker.name, rate =>
+          this.updateTickers(ticker.name, rate)
+        );
       });
     }
-    setInterval(this.updateTickersRates, 5000);
   }
 };
 </script>
