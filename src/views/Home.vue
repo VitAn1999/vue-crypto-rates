@@ -205,7 +205,7 @@
 </template>
 
 <script>
-import { subscribeToTicker } from '../api/loadRates';
+import { subscribeToTicker, unsubscribeFromTicker } from '../api/loadRates';
 export default {
   name: 'Home',
   data() {
@@ -328,6 +328,10 @@ export default {
       if (this.selectedTicker === inputTick) {
         this.selectedTicker = null;
       }
+
+      unsubscribeFromTicker(inputTick, () => {
+        console.log(inputTick);
+      });
     },
 
     checkTicker(ticker) {

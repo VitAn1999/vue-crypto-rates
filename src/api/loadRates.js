@@ -3,19 +3,35 @@ const API_KEY =
 
 const tickersHandler = new Map();
 
-export const loadRates = () =>
+export const loadRates = () => {
+  if (tickersHandler.size === 0) {
+    return;
+  }
   fetch(
     `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${Array.from(
       tickersHandler.key()
     ).join(',')}&tsyms=USD&api_key=${API_KEY}`
   )
     .then(response => response.json())
-    .then(loadData =>
-      Object.fromEntries(
+    .then(loadData => {
+      // в updateRates помещаем объект из ключа Наименование криптовалюты и
+      // значения Курс криптовалюты {'BTC': 51250.52}
+      const updatedRates = Object.fromEntries(
         Object.entries(loadData).map(([key, value]) => [key, value.USD])
-      )
-    );
+      );
+      // Превращаем updateRates в массив ['BTC', 51250.52]
+      Object.entries(updatedRates).forEach((tickerName, rate) => {
+        // в массив handlers помещаем callback-функции по ключу tickerName
+        const handlers = tickersHandler.get(tickerName) || [];
+        // перебираем все колбэки и в качестве аргумента помещаем туда
+        // актуальные курсы
+        handlers.forEach(cb => cb(rate));
+      });
+    });
+};
 
+// функция подписка на тикер, добавляет в мапу tickersHandler по ключу тикера
+// колбэк-функцию {'BTC': callback()}
 export const subscribeToTicker = (ticker, cb) => {
   const subscriber = tickersHandler.get(ticker) || [];
   tickersHandler.set(ticker, [...subscriber, cb]);
@@ -28,5 +44,7 @@ export const unsubscribeFromTicker = (ticker, cb) => {
     subscriber.filter(fn => fn !== cb)
   );
 };
+
+setInterval(loadRates, 5000);
 
 window.tickers = tickersHandler;
