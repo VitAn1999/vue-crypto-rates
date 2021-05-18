@@ -205,7 +205,7 @@
 </template>
 
 <script>
-import { loadRates } from '../api/loadRates';
+import { subscribeToTicker } from '../api/loadRates';
 export default {
   name: 'Home',
   data() {
@@ -282,16 +282,14 @@ export default {
 
   methods: {
     async updateTickersRates() {
-      if (!this.tickers.length) {
-        return;
-      }
-
-      const tickersRates = await loadRates(this.tickers.map(t => t.name));
-
-      this.tickers.forEach(ticker => {
-        const rate = tickersRates[ticker.name.toUpperCase()];
-        ticker.rate = rate ?? '-';
-      });
+      // if (!this.tickers.length) {
+      //   return;
+      // }
+      // const tickersRates = await loadRates(this.tickers.map(t => t.name));
+      // this.tickers.forEach(ticker => {
+      //   const rate = tickersRates[ticker.name.toUpperCase()];
+      //   ticker.rate = rate ?? '-';
+      // });
     },
 
     formattedRate(rate) {
@@ -314,6 +312,9 @@ export default {
       ) {
         this.tickers = [...this.tickers, currentTicker];
         this.ticker = '';
+        subscribeToTicker(currentTicker.name, () => {
+          console.log(currentTicker.name);
+        });
       }
     },
 
@@ -399,6 +400,11 @@ export default {
     });
     if (localStorage.getItem('activeTickers')) {
       this.tickers = JSON.parse(localStorage.getItem('activeTickers'));
+      this.tickers.forEach(ticker => {
+        subscribeToTicker(ticker.name, () => {
+          console.log(ticker.name);
+        });
+      });
     }
     setInterval(this.updateTickersRates, 5000);
   }

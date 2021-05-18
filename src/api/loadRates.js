@@ -3,11 +3,11 @@ const API_KEY =
 
 const tickersHandler = new Map();
 
-export const loadRates = tickers =>
+export const loadRates = () =>
   fetch(
-    `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tickers.join(
-      ','
-    )}&tsyms=USD&api_key=${API_KEY}`
+    `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${Array.from(
+      tickersHandler.key()
+    ).join(',')}&tsyms=USD&api_key=${API_KEY}`
   )
     .then(response => response.json())
     .then(loadData =>
@@ -28,3 +28,5 @@ export const unsubscribeFromTicker = (ticker, cb) => {
     subscriber.filter(fn => fn !== cb)
   );
 };
+
+window.tickers = tickersHandler;
