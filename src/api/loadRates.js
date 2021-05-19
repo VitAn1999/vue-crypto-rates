@@ -16,7 +16,7 @@ socket.addEventListener('message', message => {
   const { TYPE: type, FROMSYMBOL: tickerName, PRICE: rate } = JSON.parse(
     message.data
   );
-  if (type !== AGGREGATE_INDEX) {
+  if (type !== AGGREGATE_INDEX || rate === undefined) {
     return;
   }
   // в массив handlers помещаем callback-функции по ключу tickerName

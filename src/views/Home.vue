@@ -284,13 +284,19 @@ export default {
     updateTickers(tickerName, rate) {
       this.tickers
         .filter(t => t.name === tickerName)
-        .forEach(t => (t.rate = rate));
+        .forEach(t => {
+          if (t === this.selectedTicker) {
+            this.graph.push(rate);
+          }
+          t.rate = rate;
+        });
     },
 
     formattedRate(rate) {
       if (rate === '-') {
         return rate;
       }
+      window.rate = rate;
       return rate > 1 ? +rate.toFixed(2) : +rate.toPrecision(3);
     },
 
