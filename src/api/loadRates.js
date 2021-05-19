@@ -3,6 +3,15 @@ const API_KEY =
 
 const tickersHandler = new Map();
 
+// Подключаем webSocket
+const socket = new WebSocket(
+  `wss://streamer.cryptocompare.com/v2?api_key=${API_KEY}`
+);
+
+socket.addEventListener('message', message => {
+  console.log(message);
+});
+
 export const loadRates = () => {
   if (tickersHandler.size === 0) {
     return;
@@ -31,11 +40,30 @@ export const loadRates = () => {
     });
 };
 
+function subscribeToTickerWithWS(ticker) {
+  const message = JSON.stringify({
+    action: 'SubAdd',
+    subs: [`5~CCCAGG~${ticker}~USD`]
+  });
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(message);
+    return;
+  }
+  socket.addEventListener(
+    'open',
+    () => {
+      socket.send(message);
+    },
+    { once: true }
+  );
+}
+
 // функция подписка на тикер, добавляет в мапу tickersHandler по ключу тикера
 // колбэк-функцию {'BTC': callback()}
 export const subscribeToTicker = (ticker, cb) => {
   const subscriber = tickersHandler.get(ticker) || [];
   tickersHandler.set(ticker, [...subscriber, cb]);
+  subscribeToTickerWithWS(ticker);
 };
 
 export const unsubscribeFromTicker = ticker => {
