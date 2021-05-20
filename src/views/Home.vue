@@ -308,8 +308,9 @@ export default {
       if (
         this.tickers.findIndex(
           ticker => ticker.name.toUpperCase() === currentTicker.name
-        ) === -1 &&
-        this.fetchTickersList.includes(this.ticker.toUpperCase())
+        ) ===
+        -1 /*&&
+        this.fetchTickersList.includes(this.ticker.toUpperCase())*/
       ) {
         this.tickers = [...this.tickers, currentTicker];
         this.ticker = '';
