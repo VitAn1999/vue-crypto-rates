@@ -9,13 +9,48 @@ const socket = new WebSocket(
 );
 
 const AGGREGATE_INDEX = '5';
+const INVALID_SUB = '500';
 
 // при получении сообщения от WebSocket запускаем обработчик событий
 socket.addEventListener('message', message => {
   // из message.data получаем type, tickerName и rate
-  const { TYPE: type, FROMSYMBOL: tickerName, PRICE: rate } = JSON.parse(
-    message.data
-  );
+  const {
+    TYPE: type,
+    FROMSYMBOL: tickerName,
+    PRICE: rate,
+    PARAMETER: param
+  } = JSON.parse(message.data);
+  // if (type === INVALID_SUB) {
+  //   console.log('invalid');
+  //   return;
+  // const newMessage = JSON.stringify({
+  //   action: 'SubAdd',
+  //   subs: [`5~CCCAGG~${tickerName}~BTC`]
+  // });
+  // message = newMessage;
+  // socket.addEventListener('message', message => {
+  //   // из message.data получаем type, tickerName и rate
+  //   const { TYPE: type, FROMSYMBOL: tickerName, PRICE: rate } = JSON.parse(
+  //     message.data
+  //   );
+  //   if (type !== AGGREGATE_INDEX || rate === undefined) {
+  //     const handlers = tickersHandler.get(tickerName) || [];
+  //     handlers.forEach(cb => cb('-'));
+  //   }
+  //   // в массив handlers помещаем callback-функции по ключу tickerName
+  //   const handlers = tickersHandler.get(tickerName) || [];
+  //   // перебираем все колбэки и в качестве аргумента помещаем туда
+  //   // актуальные курсы
+  //   handlers.forEach(cb => cb(rate));
+  // });
+  // }
+  if (type === INVALID_SUB) {
+    const invalidTicker = param.split('~')[2];
+    console.log(invalidTicker);
+    const handlers = tickersHandler.get(invalidTicker) || [];
+    handlers.forEach(cb => cb(null));
+  }
+
   if (type !== AGGREGATE_INDEX || rate === undefined) {
     return;
   }

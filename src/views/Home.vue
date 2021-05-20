@@ -126,8 +126,12 @@
             v-for="(t, inx) in paginatedTickers"
             :key="inx"
             @click="checkTicker(t)"
-            :class="{ 'border-4': t === selectedTicker }"
-            class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
+            :class="{
+              'border-4': t === selectedTicker,
+              'bg-white': !t.errorTicker,
+              'bg-red-100': t.errorTicker
+            }"
+            class="overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
             <div class="px-4 py-5 sm:p-6 text-center">
               <dt class="text-sm font-medium text-gray-500 truncate">
@@ -282,14 +286,20 @@ export default {
 
   methods: {
     updateTickers(tickerName, rate) {
-      this.tickers
-        .filter(t => t.name === tickerName)
-        .forEach(t => {
-          if (t === this.selectedTicker) {
-            this.graph.push(rate);
-          }
-          t.rate = rate;
-        });
+      if (rate === null) {
+        this.tickers
+          .filter(t => t.name === tickerName)
+          .forEach(t => (t.errorTicker = true));
+      } else {
+        this.tickers
+          .filter(t => t.name === tickerName)
+          .forEach(t => {
+            if (t === this.selectedTicker) {
+              this.graph.push(rate);
+            }
+            t.rate = rate;
+          });
+      }
     },
 
     formattedRate(rate) {
@@ -303,7 +313,8 @@ export default {
     add() {
       const currentTicker = {
         name: this.ticker.toUpperCase(),
-        rate: '-'
+        rate: '-',
+        errorTicker: false
       };
       if (
         this.tickers.findIndex(
@@ -314,9 +325,9 @@ export default {
       ) {
         this.tickers = [...this.tickers, currentTicker];
         this.ticker = '';
-        subscribeToTicker(currentTicker.name, rate =>
-          this.updateTickers(currentTicker.name, rate)
-        );
+        subscribeToTicker(currentTicker.name, rate => {
+          this.updateTickers(currentTicker.name, rate);
+        });
       }
     },
 
