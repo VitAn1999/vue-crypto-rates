@@ -19,21 +19,6 @@ socket.addEventListener('message', message => {
     PARAMETER: param
   } = JSON.parse(message.data);
   if (type === INVALID_SUB && tickersHandler.size !== 0) {
-    // const btcRequest = JSON.stringify({
-    //   action: 'SubAdd',
-    //   subs: [`5~CCCAGG~BTC~USD`]
-    // });
-    // socket.send(btcRequest);
-    // let btcRate;
-    // socket.addEventListener('message', btcRequest => {
-    //   const { TYPE: type, PRICE: rate } = JSON.parse(btcRequest.data);
-    //   if (type !== AGGREGATE_INDEX || rate === undefined) {
-    //     return;
-    //   }
-    //   btcRate = rate;
-    // });
-    // console.log(btcRate);
-
     const invalidTicker = param.split('~')[2];
     const newMessage = JSON.stringify({
       action: 'SubAdd',
@@ -56,7 +41,22 @@ socket.addEventListener('message', message => {
       if (type !== AGGREGATE_INDEX || rate === undefined) {
         return;
       }
-      console.log(rate);
+      // const btcRequest = JSON.stringify({
+      //   action: 'SubAdd',
+      //   subs: [`5~CCCAGG~BTC~USD`]
+      // });
+      // socket.send(btcRequest);
+      // let btcRate;
+      // socket.addEventListener('message', btcRequest => {
+      //   const { TYPE: type, PRICE: rate } = JSON.parse(btcRequest.data);
+      //   if (type !== AGGREGATE_INDEX || rate === undefined) {
+      //     return;
+      //   }
+      //   btcRate = rate;
+      // });
+      // console.log(btcRate);
+      // let crossRate = btcRate * rate;
+      // console.log(crossRate);
       const handlers = tickersHandler.get(tickerName) || [];
       handlers.forEach(cb => cb(rate));
     });
