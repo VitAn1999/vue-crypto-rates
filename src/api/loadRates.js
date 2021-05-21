@@ -18,20 +18,21 @@ socket.addEventListener('message', message => {
     PRICE: rate,
     PARAMETER: param
   } = JSON.parse(message.data);
-  if (type === INVALID_SUB) {
-    const btcRequest = JSON.stringify({
-      action: 'SubAdd',
-      subs: [`5~CCCAGG~BTC~USD`]
-    });
-    socket.send(btcRequest);
-    let btcRate = socket.addEventListener('message', btcRequest => {
-      const { TYPE: type, PRICE: rate } = JSON.parse(btcRequest.data);
-      if (type !== AGGREGATE_INDEX || rate === undefined) {
-        return 0;
-      }
-      return rate;
-    });
-    console.log(btcRate);
+  if (type === INVALID_SUB && tickersHandler.size !== 0) {
+    // const btcRequest = JSON.stringify({
+    //   action: 'SubAdd',
+    //   subs: [`5~CCCAGG~BTC~USD`]
+    // });
+    // socket.send(btcRequest);
+    // let btcRate;
+    // socket.addEventListener('message', btcRequest => {
+    //   const { TYPE: type, PRICE: rate } = JSON.parse(btcRequest.data);
+    //   if (type !== AGGREGATE_INDEX || rate === undefined) {
+    //     return;
+    //   }
+    //   btcRate = rate;
+    // });
+    // console.log(btcRate);
 
     const invalidTicker = param.split('~')[2];
     const newMessage = JSON.stringify({
@@ -55,9 +56,9 @@ socket.addEventListener('message', message => {
       if (type !== AGGREGATE_INDEX || rate === undefined) {
         return;
       }
+      console.log(rate);
       const handlers = tickersHandler.get(tickerName) || [];
-
-      handlers.forEach(cb => cb(rate * btcRate));
+      handlers.forEach(cb => cb(rate));
     });
   }
   if (type !== AGGREGATE_INDEX || rate === undefined) {
@@ -127,6 +128,12 @@ function unsubscribeFromTickerWithWS(ticker) {
     subs: [`5~CCCAGG~${ticker}~USD`]
   });
   sendToWebSocket(message);
+
+  const newMessage = JSON.stringify({
+    action: 'SubRemove',
+    subs: [`5~CCCAGG~${ticker}~BTC`]
+  });
+  sendToWebSocket(newMessage);
 }
 
 // функция подписка на тикер, добавляет в мапу tickersHandler по ключу тикера
@@ -134,11 +141,13 @@ function unsubscribeFromTickerWithWS(ticker) {
 export const subscribeToTicker = (ticker, cb) => {
   const subscriber = tickersHandler.get(ticker) || [];
   tickersHandler.set(ticker, [...subscriber, cb]);
+  console.log(tickersHandler);
   subscribeToTickerWithWS(ticker);
 };
 
 export const unsubscribeFromTicker = ticker => {
   tickersHandler.delete(ticker);
+  console.log(tickersHandler);
   unsubscribeFromTickerWithWS(ticker);
 };
 
