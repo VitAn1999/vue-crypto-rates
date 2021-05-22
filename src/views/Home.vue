@@ -128,8 +128,8 @@
             @click="checkTicker(t)"
             :class="{
               'border-4': t === selectedTicker,
-              'bg-white': !t.errorTicker,
-              'bg-red-100': t.errorTicker
+              'bg-white': t.rate !== '-',
+              'bg-red-100': t.rate === '-'
             }"
             class="overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
@@ -286,20 +286,14 @@ export default {
 
   methods: {
     updateTickers(tickerName, rate) {
-      if (rate === null) {
-        this.tickers
-          .filter(t => t.name === tickerName)
-          .forEach(t => (t.errorTicker = true));
-      } else {
-        this.tickers
-          .filter(t => t.name === tickerName)
-          .forEach(t => {
-            if (t === this.selectedTicker) {
-              this.graph.push(rate);
-            }
-            t.rate = rate;
-          });
-      }
+      this.tickers
+        .filter(t => t.name === tickerName)
+        .forEach(t => {
+          if (t === this.selectedTicker) {
+            this.graph.push(rate);
+          }
+          t.rate = rate;
+        });
     },
 
     formattedRate(rate) {
@@ -313,8 +307,7 @@ export default {
     add() {
       const currentTicker = {
         name: this.ticker.toUpperCase(),
-        rate: '-',
-        errorTicker: false
+        rate: '-'
       };
       if (
         this.tickers.findIndex(
