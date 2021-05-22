@@ -18,19 +18,14 @@ socket.addEventListener('message', message => {
     PRICE: rate,
     PARAMETER: param
   } = JSON.parse(message.data);
-  console.log(tickersHandler.has(tickerName), tickersHandler, tickerName);
+
   if (type === AGGREGATE_INDEX && rate !== undefined) {
     const handlers = tickersHandler.get(tickerName) || [];
     handlers.forEach(cb => cb(rate));
   }
 
-  if (type === INVALID_SUB && tickersHandler.has(param.split('~')[2])) {
+  if (type === INVALID_SUB) {
     const invalidTicker = param.split('~')[2];
-    console.log(
-      tickersHandler.has(invalidTicker),
-      tickersHandler,
-      invalidTicker
-    );
     const newMessage = JSON.stringify({
       action: 'SubAdd',
       subs: [`5~CCCAGG~${invalidTicker}~BTC`]
@@ -43,7 +38,11 @@ socket.addEventListener('message', message => {
         PRICE: btcRate,
         PARAMETER: param
       } = JSON.parse(newMessage.data);
-      if (type === AGGREGATE_INDEX && btcRate !== undefined) {
+      if (
+        type === AGGREGATE_INDEX &&
+        btcRate !== undefined &&
+        tickersHandler.has(invalidTicker)
+      ) {
         const btcRequest = JSON.stringify({
           action: 'SubAdd',
           subs: [`5~CCCAGG~BTC~USD`]
@@ -57,24 +56,32 @@ socket.addEventListener('message', message => {
               subs: [`5~CCCAGG~BTC~USD`]
             });
             socket.send(btcUnsubscribe);
-          }
-          if (type === AGGREGATE_INDEX && btcUsdRate !== undefined) {
+          } else if (type === AGGREGATE_INDEX && btcUsdRate !== undefined) {
             let crossRate = btcUsdRate * btcRate;
             const handlers = tickersHandler.get(tickerName) || [];
             handlers.forEach(cb => cb(crossRate));
+          } else {
+            return;
           }
-          return;
         });
       }
-      if (type === INVALID_SUB && tickersHandler.has(tickerName)) {
+      if (type === INVALID_SUB) {
         const invalidTicker = param.split('~')[2];
-        console.log(invalidTicker);
-        const handlers = tickersHandler.get(invalidTicker) || [];
-        handlers.forEach(cb => cb(null));
+        if (!tickersHandler.has(invalidTicker)) {
+          const newUnsubscribeMessage = JSON.stringify({
+            action: 'SubRemove',
+            subs: [`5~CCCAGG~${invalidTicker}~BTC`]
+          });
+          socket.send(newUnsubscribeMessage);
+        } else {
+          const handlers = tickersHandler.get(invalidTicker) || [];
+          handlers.forEach(cb => cb(null));
+        }
       }
       return;
     });
   }
+
   return;
 });
 
@@ -137,12 +144,6 @@ function unsubscribeFromTickerWithWS(ticker) {
     subs: [`5~CCCAGG~${ticker}~USD`]
   });
   sendToWebSocket(message);
-
-  const newMessage = JSON.stringify({
-    action: 'SubRemove',
-    subs: [`5~CCCAGG~${ticker}~BTC`]
-  });
-  sendToWebSocket(newMessage);
 }
 
 // функция подписка на тикер, добавляет в мапу tickersHandler по ключу тикера
