@@ -22,16 +22,18 @@ export const loadAllCurrencies = async () => {
 
 loadAllCurrencies();
 
-const loadBtcRate = async () => {
-  const url = `https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD&api_key=${API_KEY}`;
-  const response = await fetch(url);
-  const json = await response.json();
-  const rate = await json.USD;
-  return rate;
+const loadCrossRate = async tickerName => {
+  console.log(tickerName);
+  const tickerUrl = `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=${API_KEY}`;
+  const tickerResponse = await fetch(tickerUrl);
+  const tickerJson = await tickerResponse.json();
+  const tickerRate = await tickerJson.USD;
+  return tickerRate;
 };
 
 const AGGREGATE_INDEX = '5';
 const INVALID_SUB = '500';
+// const UNSUB_INFO = 'SUBSCRIPTION_UNRECOGNIZED';
 
 socket.addEventListener('message', async message => {
   const {
@@ -39,12 +41,9 @@ socket.addEventListener('message', async message => {
     FROMSYMBOL: tickerName,
     TOSYMBOL: currency,
     PRICE: rate,
+    // MESSAGE: messageInfo,
     PARAMETER: param
   } = JSON.parse(message.data);
-
-  console.log(tickersList);
-
-  let index = await loadBtcRate();
 
   if (type === AGGREGATE_INDEX && rate !== undefined && currency === 'USD') {
     const handlers = tickersHandler.get(tickerName) || [];
@@ -56,16 +55,8 @@ socket.addEventListener('message', async message => {
     tickersList.findIndex(t => t === param.split('~')[2]) !== -1
   ) {
     let invalidTicker = param.split('~')[2];
-    const newMessage = JSON.stringify({
-      action: 'SubAdd',
-      subs: [`5~CCCAGG~${invalidTicker}~BTC`]
-    });
-    socket.send(newMessage);
-  }
-
-  if (type === AGGREGATE_INDEX && rate !== undefined && currency === 'BTC') {
-    const handlers = tickersHandler.get(tickerName) || [];
-    let crossRate = rate * index;
+    let crossRate = await loadCrossRate(invalidTicker);
+    const handlers = tickersHandler.get(invalidTicker) || [];
     handlers.forEach(cb => cb(crossRate));
   }
 
@@ -126,11 +117,11 @@ function subscribeToTickerWithWS(ticker) {
 
 function unsubscribeFromTickerWithWS(ticker) {
   // сообщение с отпиской отправляемое на сервер
-  const usdUnsub = JSON.stringify({
+  const unsub = JSON.stringify({
     action: 'SubRemove',
     subs: [`5~CCCAGG~${ticker}~USD`]
   });
-  sendToWebSocket(usdUnsub);
+  sendToWebSocket(unsub);
 }
 
 // функция подписка на тикер, добавляет в мапу tickersHandler по ключу тикера

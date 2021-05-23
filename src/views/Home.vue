@@ -209,7 +209,11 @@
 </template>
 
 <script>
-import { subscribeToTicker, unsubscribeFromTicker } from '../api/loadRates';
+import {
+  loadAllCurrencies,
+  subscribeToTicker,
+  unsubscribeFromTicker
+} from '../api/loadRates';
 export default {
   name: 'Home',
   data() {
@@ -398,13 +402,15 @@ export default {
     if (windowData.page) {
       this.page = +windowData.page;
     }
-    const fetchData = await fetch(
-      'https://min-api.cryptocompare.com/data/all/coinlist?summary=true'
-    );
-    const fetchDataJson = await fetchData.json();
-    Object.values(fetchDataJson.Data).forEach(t => {
-      this.fetchTickersList.push(t.Symbol);
-    });
+    this.fetchTickersList = await loadAllCurrencies();
+    console.log(this.fetchTickersList);
+    // const fetchData = await fetch(
+    //   'https://min-api.cryptocompare.com/data/all/coinlist?summary=true'
+    // );
+    // const fetchDataJson = await fetchData.json();
+    // Object.values(fetchDataJson.Data).forEach(t => {
+    //   this.fetchTickersList.push(t.Symbol);
+    // });
     if (localStorage.getItem('activeTickers')) {
       this.tickers = JSON.parse(localStorage.getItem('activeTickers'));
       this.tickers.forEach(ticker => {
