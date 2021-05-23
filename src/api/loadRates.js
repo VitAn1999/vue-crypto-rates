@@ -23,7 +23,6 @@ export const loadAllCurrencies = async () => {
 loadAllCurrencies();
 
 const loadCrossRate = async tickerName => {
-  console.log(tickerName);
   const tickerUrl = `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=${API_KEY}`;
   const tickerResponse = await fetch(tickerUrl);
   const tickerJson = await tickerResponse.json();
@@ -58,6 +57,15 @@ socket.addEventListener('message', async message => {
     let crossRate = await loadCrossRate(invalidTicker);
     const handlers = tickersHandler.get(invalidTicker) || [];
     handlers.forEach(cb => cb(crossRate));
+  }
+
+  if (
+    type === INVALID_SUB &&
+    tickersList.findIndex(t => t === param.split('~')[2]) === -1
+  ) {
+    let invalidTicker = param.split('~')[2];
+    const handlers = tickersHandler.get(invalidTicker) || [];
+    handlers.forEach(cb => cb(null));
   }
 
   return;
@@ -129,13 +137,11 @@ function unsubscribeFromTickerWithWS(ticker) {
 export const subscribeToTicker = (ticker, cb) => {
   const subscriber = tickersHandler.get(ticker) || [];
   tickersHandler.set(ticker, [...subscriber, cb]);
-  console.log(tickersHandler);
   subscribeToTickerWithWS(ticker);
 };
 
 export const unsubscribeFromTicker = ticker => {
   tickersHandler.delete(ticker);
-  console.log(tickersHandler);
   unsubscribeFromTickerWithWS(ticker);
 };
 

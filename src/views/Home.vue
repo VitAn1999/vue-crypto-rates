@@ -128,8 +128,8 @@
             @click="checkTicker(t)"
             :class="{
               'border-4': t === selectedTicker,
-              'bg-white': t.rate !== '-',
-              'bg-red-100': t.rate === '-'
+              'bg-white': !t.errorClass,
+              'bg-red-100': t.errorClass
             }"
             class="overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
@@ -290,6 +290,11 @@ export default {
 
   methods: {
     updateTickers(tickerName, rate) {
+      if (rate === null) {
+        this.tickers
+          .filter(t => t.name === tickerName)
+          .forEach(t => (t.errorClass = true));
+      }
       this.tickers
         .filter(t => t.name === tickerName)
         .forEach(t => {
@@ -301,17 +306,18 @@ export default {
     },
 
     formattedRate(rate) {
-      if (rate === '-') {
-        return rate;
+      if (rate === null || rate === '-') {
+        return '-';
+      } else {
+        return rate > 1 ? +rate.toFixed(2) : +rate.toPrecision(3);
       }
-      window.rate = rate;
-      return rate > 1 ? +rate.toFixed(2) : +rate.toPrecision(3);
     },
 
     add() {
       const currentTicker = {
         name: this.ticker.toUpperCase(),
-        rate: '-'
+        rate: '-',
+        errorClass: false
       };
       if (
         this.tickers.findIndex(
@@ -403,14 +409,6 @@ export default {
       this.page = +windowData.page;
     }
     this.fetchTickersList = await loadAllCurrencies();
-    console.log(this.fetchTickersList);
-    // const fetchData = await fetch(
-    //   'https://min-api.cryptocompare.com/data/all/coinlist?summary=true'
-    // );
-    // const fetchDataJson = await fetchData.json();
-    // Object.values(fetchDataJson.Data).forEach(t => {
-    //   this.fetchTickersList.push(t.Symbol);
-    // });
     if (localStorage.getItem('activeTickers')) {
       this.tickers = JSON.parse(localStorage.getItem('activeTickers'));
       this.tickers.forEach(ticker => {
