@@ -398,6 +398,16 @@ export default {
   },
 
   async created() {
+    let worker = new SharedWorker('../api/sharedWorker.js');
+    worker.port.addEventListener(
+      'message',
+      e => {
+        console.log(e.data);
+      },
+      false
+    );
+    worker.port.start();
+    worker.port.postMessage('start');
     // загружаем history с query-параметрами и записываем их в объект с ключами filter и page
     const windowData = Object.fromEntries(
       new URL(window.location).searchParams.entries()
