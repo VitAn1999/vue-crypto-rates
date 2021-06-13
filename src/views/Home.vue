@@ -304,8 +304,6 @@ export default {
         .forEach(t => {
           if (t === this.selectedTicker) {
             this.graph.push(rate);
-            this.maxGraphElements = this.$refs.graph.clientWidth / 38;
-            console.log(this.maxGraphElements);
             while (this.graph.length > this.maxGraphElements) {
               this.graph.shift();
             }
@@ -374,7 +372,6 @@ export default {
       if (!this.$refs.graph) {
         return;
       }
-      console.log('resize');
       this.maxGraphElements = this.$refs.graph.clientWidth / 38;
     },
 
@@ -396,6 +393,7 @@ export default {
 
     selectedTicker() {
       this.graph = [];
+      this.$nextTick().then(() => this.calculateMaxGraphElement());
     },
 
     filter() {
