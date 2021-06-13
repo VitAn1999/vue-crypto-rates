@@ -71,34 +71,6 @@ socket.addEventListener('message', async message => {
   return;
 });
 
-// export const loadRates = () => {
-//   if (tickersHandler.size === 0) {
-//     return;
-//   }
-//   fetch(
-//     `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${Array.from(
-//       tickersHandler.keys()
-//     ).join(',')}&tsyms=USD&api_key=${API_KEY}`
-//   )
-//     .then(response => response.json())
-//     .then(loadData => {
-//       // в updateRates помещаем объект из ключа Наименование криптовалюты и
-//       // значения Курс криптовалюты {'BTC': 51250.52}
-//       const updatedRates = Object.fromEntries(
-//         Object.entries(loadData).map(([key, value]) => [key, value.USD])
-//       );
-//       // Превращаем updateRates в массив ['BTC', 51250.52]
-//       Object.entries(updatedRates).forEach(([tickerName, rate]) => {
-//         // в массив handlers помещаем callback-функции по ключу tickerName
-//         const handlers = tickersHandler.get(tickerName) || [];
-//         // перебираем все колбэки и в качестве аргумента помещаем туда
-//         // актуальные курсы
-//         console.log(tickerName, rate);
-//         handlers.forEach(cb => cb(rate));
-//       });
-//     });
-// };
-
 function sendToWebSocket(message) {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(message);

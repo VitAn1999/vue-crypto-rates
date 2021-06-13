@@ -168,7 +168,10 @@
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
           {{ selectedTicker.name }} - USD
         </h3>
-        <div class="flex items-end border-gray-600 border-b border-l h-64">
+        <div
+          ref="graph"
+          class="flex items-end border-gray-600 border-b border-l h-64"
+        >
           <div
             v-for="(bar, idx) in normalizeGraph"
             :key="idx"
@@ -225,7 +228,8 @@ export default {
       graph: [],
       fetchTickersList: [],
       tickersList: [],
-      page: 1
+      page: 1,
+      maxGraphElements: 1
     };
   },
 
@@ -300,6 +304,11 @@ export default {
         .forEach(t => {
           if (t === this.selectedTicker) {
             this.graph.push(rate);
+            this.maxGraphElements = this.$refs.graph.clientWidth / 38;
+            console.log(this.maxGraphElements);
+            while (this.graph.length > this.maxGraphElements) {
+              this.graph.shift();
+            }
           }
           t.rate = rate;
         });
@@ -361,6 +370,14 @@ export default {
       return this.tickersList;
     },
 
+    calculateMaxGraphElement() {
+      if (!this.$refs.graph) {
+        return;
+      }
+      console.log('resize');
+      this.maxGraphElements = this.$refs.graph.clientWidth / 38;
+    },
+
     saveUrlInHistory() {
       // Используем встроенный метод history.pushState() для сохранения query-параметров
       history.pushState(
@@ -395,6 +412,14 @@ export default {
         this.page = this.page - 1;
       }
     }
+  },
+
+  mounted() {
+    window.addEventListener('resize', this.calculateMaxGraphElement);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('resize', this.calculateMaxGraphElement);
   },
 
   async created() {
