@@ -2,63 +2,13 @@
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
     <div class="container">
       <div class="w-full my-4"></div>
-      <section>
-        <div class="flex">
-          <div class="max-w-xs">
-            <label for="wallet" class="block text-sm font-medium text-gray-700"
-              >Тикер</label
-            >
-            <div class="mt-1 relative rounded-md shadow-md">
-              <input
-                v-model="ticker"
-                @input="inputTicker"
-                @keydown.enter="add"
-                type="text"
-                name="wallet"
-                id="wallet"
-                class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
-                placeholder="Например DOGE"
-              />
-            </div>
-            <div
-              v-show="isInclude"
-              class="flex bg-white shadow-md p-1 rounded-md flex-wrap"
-            >
-              <span
-                v-for="t in tickersList"
-                :key="t"
-                @click="addFromSelect(t)"
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                {{ t }}
-              </span>
-            </div>
-            <div v-if="isRepeat" class="text-sm text-red-600">
-              Такой тикер уже добавлен
-            </div>
-          </div>
-        </div>
-        <button
-          @click="add"
-          type="button"
-          class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-        >
-          <!-- Heroicon name: solid/mail -->
-          <svg
-            class="-ml-0.5 mr-2 h-6 w-6"
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="#ffffff"
-          >
-            <path
-              d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-            ></path>
-          </svg>
-          Добавить
-        </button>
-      </section>
+
+      <add-ticker
+        :fetchTickersList="fetchTickersList"
+        :tickers="tickers"
+        @add-ticker="add"
+      />
+
       <hr class="w-full border-t border-gray-600 my-4" />
       <template v-if="tickers.length">
         <template class="mt-1 max-w-xs flex justify-between">
@@ -217,17 +167,18 @@ import {
   subscribeToTicker,
   unsubscribeFromTicker
 } from '../api/loadRates';
+
+import AddTicker from '@/components/AddTicker.vue';
 export default {
   name: 'Home',
+  components: { AddTicker },
   data() {
     return {
-      ticker: '',
       filter: '',
       tickers: [],
       selectedTicker: null,
       graph: [],
       fetchTickersList: [],
-      tickersList: [],
       page: 1,
       maxGraphElements: 1
     };
@@ -254,27 +205,6 @@ export default {
 
     hasNextPage() {
       return this.filteredTickers.length <= this.endIndex;
-    },
-
-    isRepeat() {
-      if (
-        this.tickers.findIndex(ticker => ticker.name === this.ticker) === -1
-      ) {
-        return false;
-      }
-      return true;
-    },
-
-    isInclude() {
-      if (
-        this.ticker &&
-        this.fetchTickersList.filter(t =>
-          t.startsWith(this.ticker.toUpperCase())
-        ).length
-      ) {
-        return true;
-      }
-      return false;
     },
 
     normalizeGraph() {
@@ -320,9 +250,9 @@ export default {
       }
     },
 
-    add() {
+    add(ticker) {
       const currentTicker = {
-        name: this.ticker.toUpperCase(),
+        name: ticker.toUpperCase(),
         rate: '-',
         errorClass: false
       };
@@ -334,16 +264,10 @@ export default {
         this.fetchTickersList.includes(this.ticker.toUpperCase())*/
       ) {
         this.tickers = [...this.tickers, currentTicker];
-        this.ticker = '';
         subscribeToTicker(currentTicker.name, rate => {
           this.updateTickers(currentTicker.name, rate);
         });
       }
-    },
-
-    addFromSelect(ticker) {
-      this.ticker = ticker;
-      this.add();
     },
 
     handleDelete(inputTick) {
@@ -356,16 +280,6 @@ export default {
 
     checkTicker(ticker) {
       this.selectedTicker = ticker;
-    },
-
-    inputTicker() {
-      let inputArr = this.fetchTickersList.filter(t =>
-        t.startsWith(this.ticker.toUpperCase())
-      );
-      if (inputArr.length !== this.fetchTickersList.length) {
-        this.tickersList = inputArr.slice(0, 4);
-      }
-      return this.tickersList;
     },
 
     calculateMaxGraphElement() {
