@@ -61,7 +61,7 @@ export default {
 
   // Во Vue3 emits можно расписывать как пропсы, только в виде функции
   emits: {
-    'add-ticker': value => typeof value === String && value !== ''
+    'add-ticker': value => typeof value === 'string' && value !== ''
   },
 
   methods: {
