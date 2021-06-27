@@ -287,7 +287,7 @@ export default {
     if (windowData.page) {
       this.page = +windowData.page;
     }
-    this.fetchTickersList = await loadAllCurrencies();
+
     if (localStorage.getItem('activeTickers')) {
       this.tickers = JSON.parse(localStorage.getItem('activeTickers'));
       this.tickers.forEach(ticker => {
@@ -296,6 +296,8 @@ export default {
         );
       });
     }
+
+    this.fetchTickersList = await loadAllCurrencies();
   }
 };
 </script>

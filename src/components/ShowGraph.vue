@@ -55,6 +55,11 @@ export default {
     }
   },
 
+  emits: {
+    'calculate-maxgraph-element': value => typeof value === 'number',
+    'remove-ticker': null
+  },
+
   methods: {
     calculateMaxGraphElement() {
       if (!this.$refs.graph) {
