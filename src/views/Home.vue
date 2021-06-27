@@ -3,11 +3,7 @@
     <div class="container">
       <div class="w-full my-4"></div>
 
-      <add-ticker
-        :fetchTickersList="fetchTickersList"
-        :tickers="tickers"
-        @add-ticker="add"
-      />
+      <add-ticker :fetchTickersList="fetchTickersList" @add-ticker="add" />
 
       <hr class="w-full border-t border-gray-600 my-4" />
       <template v-if="tickers.length">
@@ -169,6 +165,7 @@ import {
 } from '../api/loadRates';
 
 import AddTicker from '@/components/AddTicker.vue';
+
 export default {
   name: 'Home',
   components: { AddTicker },
@@ -335,16 +332,6 @@ export default {
   },
 
   async created() {
-    let worker = new SharedWorker('../api/sharedWorker.js');
-    worker.port.addEventListener(
-      'message',
-      e => {
-        console.log(e.data);
-      },
-      false
-    );
-    worker.port.start();
-    worker.port.postMessage('start');
     // загружаем history с query-параметрами и записываем их в объект с ключами filter и page
     const windowData = Object.fromEntries(
       new URL(window.location).searchParams.entries()

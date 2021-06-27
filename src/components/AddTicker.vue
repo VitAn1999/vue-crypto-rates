@@ -47,7 +47,8 @@ export default {
   data() {
     return {
       ticker: '',
-      tickersList: []
+      tickersList: [],
+      activeTickers: []
     };
   },
 
@@ -55,23 +56,32 @@ export default {
     fetchTickersList: {
       type: Array,
       require: true
-    },
-    tickers: {
-      type: Array,
-      require: true
     }
+  },
+
+  // Во Vue3 emits можно расписывать как пропсы, только в виде функции
+  emits: {
+    'add-ticker': value => typeof value === String && value !== ''
   },
 
   methods: {
     add() {
+      if (this.ticker === '') {
+        return;
+      }
       const ticker = this.ticker;
       this.$emit('add-ticker', ticker);
+      this.activeTickers.push(ticker);
       this.ticker = '';
     },
 
     addFromSelect(ticker) {
       this.ticker = ticker;
-      this.add();
+      if (
+        this.activeTickers.findIndex(ticker => ticker === this.ticker) === -1
+      ) {
+        this.add();
+      }
     },
 
     inputTicker() {
@@ -100,7 +110,7 @@ export default {
 
     isRepeat() {
       if (
-        this.tickers.findIndex(ticker => ticker.name === this.ticker) === -1
+        this.activeTickers.findIndex(ticker => ticker === this.ticker) === -1
       ) {
         return false;
       }
